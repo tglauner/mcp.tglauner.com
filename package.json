@@ -1,0 +1,19 @@
+{
+  "name": "mcp.tglauner.com",
+  "version": "1.0.0",
+  "description": "Public MCP server for mcp.tglauner.com",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "express": "^4.19.2",
+    "zod": "^3.23.8"
+  }
+}

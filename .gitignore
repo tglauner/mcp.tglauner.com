@@ -201,6 +201,12 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Node
+node_modules/
+npm-debug.log
+pnpm-debug.log
+yarn-error.log
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
