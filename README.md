@@ -1,11 +1,9 @@
 # mcp.tglauner.com
 
-A public Model Context Protocol (MCP) server that exposes two tools:
+A public Model Context Protocol (MCP) server that exposes a profile tool and
+resource for Tim Glauner.
 
-- `owner` → returns **Tim Glauner**
-- `hometown` → returns **New York**
-
-The MCP endpoint is available at:
+MCP endpoint (Streamable HTTP):
 
 ```
 https://mcp.tglauner.com/mcp
@@ -44,19 +42,74 @@ http://localhost:3000/
 The MCP Inspector is a quick way to test the server:
 
 ```bash
-npx @modelcontextprotocol/inspector http://localhost:3000/mcp
+npx -y @modelcontextprotocol/inspector http://localhost:3000/mcp
 ```
 
-### Example tool calls
+### Resources
+
+Once connected, list resources and read:
+
+- `profile.json` → Schema.org Person profile
+
+### Tools
 
 Once connected, invoke:
 
-- `owner` → `Tim Glauner`
-- `hometown` → `New York`
+- `profile` → returns a summary + structured profile JSON
 
 ## Deployment notes
 
 - Ensure the service is reachable at `mcp.tglauner.com/mcp`.
-- The server expects MCP clients to open an SSE connection at `/mcp` and send POST
-  messages to the same path using the `sessionId` query parameter provided by the
-  SSE handshake.
+- Streamable HTTP is the preferred transport for MCP clients.
+
+## DigitalOcean + Apache (reverse proxy)
+
+This setup runs the Node server on localhost (port 3000) and proxies
+`https://mcp.tglauner.com/mcp` through Apache.
+
+### 1) Systemd service for Node
+
+Create `/etc/systemd/system/mcp-tglauner.service`:
+
+```ini
+[Unit]
+Description=MCP server for mcp.tglauner.com
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mcp.tglauner.com
+ExecStart=/usr/bin/node /opt/mcp.tglauner.com/src/server.js
+Restart=on-failure
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now mcp-tglauner
+sudo systemctl status mcp-tglauner
+```
+
+### 2) Apache proxy config
+
+You already have a `*:443` vhost (`/etc/apache2/sites-enabled/tglauner-ssl.conf`).
+Add these lines inside that `<VirtualHost *:443>` block:
+
+```apache
+ProxyPreserveHost On
+ProxyPass /mcp http://127.0.0.1:3000/mcp flushpackets=on
+ProxyPassReverse /mcp http://127.0.0.1:3000/mcp
+```
+
+### 3) Quick smoke check
+
+```bash
+curl -s http://127.0.0.1:3000/ | jq .
+curl -s http://mcp.tglauner.com/ | jq .
+```

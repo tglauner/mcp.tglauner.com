@@ -1,0 +1,87 @@
+{
+  "profile": {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "not_yet_implemented",
+    "url": "not_yet_implemented",
+    "sameAs": ["not_yet_implemented"],
+    "jobTitle": "not_yet_implemented",
+    "worksFor": "not_yet_implemented",
+    "location": "not_yet_implemented"
+  },
+  "bio": {
+    "short": "not_yet_implemented",
+    "long": "not_yet_implemented"
+  },
+  "links": {
+    "website": "not_yet_implemented",
+    "linkedin": "not_yet_implemented",
+    "twitter_x": "not_yet_implemented",
+    "github": "not_yet_implemented",
+    "newsletter": "not_yet_implemented",
+    "other": ["not_yet_implemented"]
+  },
+  "projects": {
+    "list": [
+      {
+        "name": "not_yet_implemented",
+        "description": "not_yet_implemented",
+        "url": "not_yet_implemented",
+        "tags": ["not_yet_implemented"],
+        "years": "not_yet_implemented"
+      }
+    ]
+  },
+  "roles": {
+    "list": [
+      {
+        "title": "not_yet_implemented",
+        "org": "not_yet_implemented",
+        "start": "not_yet_implemented",
+        "end": "not_yet_implemented",
+        "notes": "not_yet_implemented"
+      }
+    ]
+  },
+  "skills": {
+    "list": [
+      {
+        "name": "not_yet_implemented",
+        "level": "not_yet_implemented",
+        "tags": ["not_yet_implemented"]
+      }
+    ]
+  },
+  "topics": {
+    "list": [
+      {
+        "name": "not_yet_implemented",
+        "summary": "not_yet_implemented"
+      }
+    ]
+  },
+  "writing": {
+    "list": [
+      {
+        "title": "not_yet_implemented",
+        "outlet": "not_yet_implemented",
+        "date": "not_yet_implemented",
+        "url": "not_yet_implemented"
+      }
+    ]
+  },
+  "talks": {
+    "list": [
+      {
+        "title": "not_yet_implemented",
+        "event": "not_yet_implemented",
+        "date": "not_yet_implemented",
+        "url": "not_yet_implemented"
+      }
+    ]
+  },
+  "contact": {
+    "email": "not_yet_implemented",
+    "contactUrl": "not_yet_implemented"
+  }
+}

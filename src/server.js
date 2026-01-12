@@ -1,13 +1,34 @@
 import express from "express";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  Server,
-} from "@modelcontextprotocol/sdk/server/index.js";
-import { SseServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  ErrorCode,
+  McpError,
+} from "@modelcontextprotocol/sdk/types.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
 const PORT = process.env.PORT || 3000;
 const MCP_PATH = "/mcp";
+
+const PROFILE = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Tim Glauner",
+  url: "https://tglauner.com",
+};
+
+const PROFILE_RESOURCE = {
+  name: "profile",
+  title: "Profile",
+  uri: "profile.json",
+  description: "Public profile for Tim Glauner.",
+  mimeType: "application/json",
+};
+
+const PROFILE_SUMMARY = `${PROFILE.name} — ${PROFILE.url}`;
 
 const server = new Server(
   {
@@ -17,29 +38,54 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
+      resources: {},
     },
   }
 );
+
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return {
+    resources: [PROFILE_RESOURCE],
+  };
+});
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  if (request.params.uri === PROFILE_RESOURCE.uri) {
+    return {
+      contents: [
+        {
+          uri: PROFILE_RESOURCE.uri,
+          mimeType: PROFILE_RESOURCE.mimeType,
+          text: JSON.stringify(PROFILE, null, 2),
+        },
+      ],
+    };
+  }
+
+  throw new McpError(
+    ErrorCode.InvalidParams,
+    `Unknown resource: ${request.params.uri}`
+  );
+});
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "owner",
-        description: "Returns the owner of the MCP server.",
+        name: "profile",
+        description: "Returns the public profile for Tim Glauner.",
         inputSchema: {
           type: "object",
           properties: {},
           additionalProperties: false,
         },
-      },
-      {
-        name: "hometown",
-        description: "Returns the hometown of the owner.",
-        inputSchema: {
+        outputSchema: {
           type: "object",
-          properties: {},
-          additionalProperties: false,
+          properties: {
+            summary: { type: "string" },
+            profile: { type: "object" },
+          },
+          required: ["summary", "profile"],
         },
       },
     ],
@@ -48,13 +94,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   switch (request.params.name) {
-    case "owner":
+    case "profile":
       return {
-        content: [{ type: "text", text: "Tim Glauner" }],
-      };
-    case "hometown":
-      return {
-        content: [{ type: "text", text: "New York" }],
+        content: [{ type: "text", text: PROFILE_SUMMARY }],
+        structuredContent: {
+          summary: PROFILE_SUMMARY,
+          profile: PROFILE,
+        },
       };
     default:
       return {
@@ -70,55 +116,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 const app = express();
-app.use(express.json({ limit: "1mb" }));
-
-const transports = new Map();
-
-app.get(MCP_PATH, async (req, res) => {
-  const transport = new SseServerTransport(MCP_PATH, res);
-  transports.set(transport.sessionId, transport);
-
-  res.on("close", () => {
-    transports.delete(transport.sessionId);
-  });
-
-  await server.connect(transport);
+const jsonParser = express.json({ limit: "1mb" });
+app.use((req, res, next) => {
+  if (req.path === MCP_PATH) {
+    return next();
+  }
+  return jsonParser(req, res, next);
 });
 
-app.post(MCP_PATH, async (req, res) => {
-  const sessionId = req.query.sessionId;
-  if (typeof sessionId !== "string") {
-    res.status(400).json({ error: "Missing sessionId query parameter." });
-    return;
-  }
-
-  const transport = transports.get(sessionId);
-  if (!transport) {
-    res.status(404).json({ error: "Session not found." });
-    return;
-  }
-
-  await transport.handlePostMessage(req, res);
+const transport = new StreamableHTTPServerTransport({
+  sessionIdGenerator: undefined,
 });
 
-app.delete(MCP_PATH, (req, res) => {
-  const sessionId = req.query.sessionId;
-  if (typeof sessionId === "string") {
-    const transport = transports.get(sessionId);
-    if (transport) {
-      transport.close();
-      transports.delete(sessionId);
-    }
-  }
+await server.connect(transport);
 
-  res.status(204).end();
+app.all(MCP_PATH, async (req, res) => {
+  await transport.handleRequest(req, res);
 });
 
 app.get("/", (req, res) => {
   res.json({
     name: "mcp.tglauner.com",
     mcpEndpoint: MCP_PATH,
-    tools: ["owner", "hometown"],
+    tools: ["profile"],
+    resources: [PROFILE_RESOURCE.uri],
   });
 });
 
