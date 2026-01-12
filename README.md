@@ -78,8 +78,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/mcp.tglauner.com
-ExecStart=/usr/bin/node /opt/mcp.tglauner.com/src/server.js
+WorkingDirectory=/var/www/html/mcp.tglauner.com
+ExecStart=/usr/bin/node /var/www/html/mcp.tglauner.com/src/server.js
 Restart=on-failure
 Environment=NODE_ENV=production
 Environment=PORT=3000
@@ -105,6 +105,14 @@ Add these lines inside that `<VirtualHost *:443>` block:
 ProxyPreserveHost On
 ProxyPass /mcp http://127.0.0.1:3000/mcp flushpackets=on
 ProxyPassReverse /mcp http://127.0.0.1:3000/mcp
+```
+
+If you want to ensure the repo itself is never served as static files, add:
+
+```apache
+<Directory /var/www/html/mcp.tglauner.com>
+  Require all denied
+</Directory>
 ```
 
 ### 3) Quick smoke check
