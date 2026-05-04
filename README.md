@@ -1,4 +1,4 @@
-# mcp.tglauner.com
+# mcp.tglauner.com (In Progress. Currently rought draft!!)
 
 A public Model Context Protocol (MCP) server that exposes a profile tool and
 resource for Tim Glauner.
